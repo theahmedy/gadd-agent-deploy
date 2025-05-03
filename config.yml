@@ -1,0 +1,9 @@
+php_version: "8.2"
+db_name: "gadd_agent"
+db_host: "127.0.0.1"
+db_username: "gadd_user"
+db_password: "G@ddAg3ntP@ss"
+app_url: "http://172.30.69.190/backend"
+
+bitbucket_user: "ayaseen_wakeb"
+bitbucket_token: "ATBB7Dqn7U3hmpgsUTXkUku7NjL3C4398339"

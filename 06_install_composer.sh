@@ -39,7 +39,9 @@ install_composer_node_yarn() {
         npm install -g yarn
     fi
 
-    echo "✅ Composer, Node.js, and Yarn installation completed."
+if ! command -v pm2 &>/dev/null; then
+  npm install -g pm2 > /dev/null 2>&1 || yarn global add pm2 > /dev/null 2>&1
+fi
 
 }
 

@@ -4,7 +4,7 @@ trap 'echo "❌ Error on line $LINENO: $BASH_COMMAND"; exit 1' ERR
 
 SECRETS_FILE="./config.yml"
 
-# 1️⃣ Ensure curl is available before anything else
+# 1️⃣ Ensure curl is available
 if ! command -v curl &> /dev/null; then
     apt-get update    > /dev/null
     apt-get install -y curl > /dev/null
@@ -19,15 +19,14 @@ fi
 
 # 3️⃣ Load secrets
 export V_PHP_VERSION=$(yq '.php_version'     "$SECRETS_FILE")
-export DB_NAME     =$(yq '.db_name'         "$SECRETS_FILE")
-export DB_HOST     =$(yq '.db_host'         "$SECRETS_FILE")
-export DB_USERNAME =$(yq '.db_username'     "$SECRETS_FILE")
-export DB_PASSWORD =$(yq '.db_password'     "$SECRETS_FILE")
-export APP_URL     =$(yq '.app_url'         "$SECRETS_FILE")
-export BB_USER     =$(yq '.bitbucket_user'  "$SECRETS_FILE")
-export BB_TOKEN    =$(yq '.bitbucket_token' "$SECRETS_FILE")
+export DB_NAME=$(yq '.db_name'               "$SECRETS_FILE")
+export DB_HOST=$(yq '.db_host'               "$SECRETS_FILE")
+export DB_USERNAME=$(yq '.db_username'       "$SECRETS_FILE")
+export DB_PASSWORD=$(yq '.db_password'       "$SECRETS_FILE")
+export APP_URL=$(yq '.app_url'               "$SECRETS_FILE")
+export BB_USER=$(yq '.bitbucket_user'        "$SECRETS_FILE")
+export BB_TOKEN=$(yq '.bitbucket_token'      "$SECRETS_FILE")
 
-# 4️⃣ Common tools (no apt-get upgrade)
 install_basic_tools() {
     apt-get remove needrestart -y > /dev/null 2>&1 || true
     apt-get clean > /dev/null

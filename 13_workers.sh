@@ -5,37 +5,40 @@ trap 'echo "❌ Error on line $LINENO: $BASH_COMMAND"; exit 1' ERR
 echo "⚙️ [16] Setting up Laravel queue worker using Supervisor..."
 
 APP_DIR="/var/www/html/gadd-agent-backend"
-QUEUE_WORKER_NAME="gadd-agent-worker"
+QUEUE_WORKER_NAME="LARAVEL-QUEUE-WORKER"
 
-if ! command -v supervisorctl &>/dev/null; then
-  echo "📦 Installing Supervisor..."
-  apt-get install -y supervisor > /dev/null
-fi
+Service_Path="/lib/systemd/system/${QUEUE_WORKER_NAME}.service"
 
-SUP_CONF="/etc/supervisor/conf.d/${QUEUE_WORKER_NAME}.conf"
+if [ ! -f "$Service_Path" ]; then
+  echo "➡️ Creating Service for Laravel worker..."
 
-if [ ! -f "$SUP_CONF" ]; then
-  echo "➡️ Creating Supervisor config for Laravel worker..."
+  cat <<EOF > "$Service_Path"
+[Unit]
+      Description=${QUEUE_WORKER_NAME}
+      After=network.target
 
-  cat <<EOF > "$SUP_CONF"
-[program:${QUEUE_WORKER_NAME}]
-process_name=%(program_name)s_%(process_num)02d
-command=php ${APP_DIR}/artisan queue:work --sleep=3 --tries=3 --timeout=90
-autostart=true
-autorestart=true
-user=www-data
-numprocs=1
-redirect_stderr=true
-stdout_logfile=${APP_DIR}/storage/logs/queue-worker.log
+      [Service]
+      ExecStart=/usr/bin/php ${APP_DIR}/artisan queue:work --sleep=3 --tries=3 --timeout=300
+      WorkingDirectory=${APP_DIR}
+      User=www-data
+      Group=www-data
+      Restart=always
+      StandardOutput=syslog
+      StandardError=syslog
+      SyslogIdentifier=laravel-queue-worker
+
+      [Install]
+      WantedBy=multi-user.target
 EOF
 
-  supervisorctl reread
-  supervisorctl update
+  systemctl daemon-reload
+  systemctl enable "${QUEUE_WORKER_NAME}"
+  systemctl start "${QUEUE_WORKER_NAME}"
 else
-  echo "✅ Supervisor config already exists for ${QUEUE_WORKER_NAME}."
+  echo "✅ Service already exists for ${QUEUE_WORKER_NAME}."
 fi
 
 echo "🔁 Restarting worker..."
-supervisorctl restart "${QUEUE_WORKER_NAME}:*"
+systemctl restart "${QUEUE_WORKER_NAME}"
 
 echo "✅ Laravel queue worker setup complete."

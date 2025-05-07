@@ -16,18 +16,29 @@ cat <<EOF > "$NGINX_CONF_PATH"
 server {
     listen 80;
     server_name localhost;
-    root /var/www/html/gadd-agent-frontend/dist;
-    index index.html;
+
+    root /var/www/html/gadd-agent-frontend/.next;
+
+    index index.html index.htm index.php;
 
     location / {
-        try_files \$uri \$uri/ /index.html;
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host \$host;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
     }
 
     location /app {
         proxy_pass http://127.0.0.1:6001;
+        proxy_set_header Host \$host;
+        proxy_read_timeout 60s;
+        proxy_connect_timeout 60s;
+        proxy_redirect off;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection "upgrade";
+        proxy_set_header Connection "Upgrade";
+        proxy_cache_bypass \$http_upgrade;
     }
 
     location /backend {
@@ -39,6 +50,10 @@ server {
             fastcgi_pass unix:/var/run/php/php${V_PHP_VERSION}-fpm.sock;
             fastcgi_param SCRIPT_FILENAME \$request_filename;
             include fastcgi_params;
+        }
+
+        if (!-e \$request_filename) {
+            rewrite ^/backend/(.*)\$ /backend/index.php?/\$1 last;
         }
     }
 }

@@ -11,12 +11,12 @@ install_php_mongodb_extension() {
     printf "\n" | pecl install mongodb-1.18.0 || true
 
     # Enable extension if not already enabled
-    ini_file="/etc/php/${V_PHP_VERSION}/mods-available/mongodb.ini"
+    ini_file="/etc/php/${PHP_VERSION}/mods-available/mongodb.ini"
     echo "extension=mongodb.so" > "$ini_file"
     phpenmod mongodb
 
     echo "🔁 Restarting PHP FPM service..."
-    systemctl restart php${V_PHP_VERSION}-fpm
+    systemctl restart php${PHP_VERSION}-fpm
 
     echo "✅ MongoDB extension installed and enabled."
 }

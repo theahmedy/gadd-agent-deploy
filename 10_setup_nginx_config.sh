@@ -3,7 +3,7 @@ set -euo pipefail
 trap 'echo "❌ Error on line $LINENO: $BASH_COMMAND"; exit 1' ERR
 
 SECRETS_FILE="./config.yml"
-export V_PHP_VERSION=$(yq '.php_version' "$SECRETS_FILE")
+export PHP_VERSION=$(yq '.php_version' "$SECRETS_FILE")
 
 NGINX_CONF_PATH="/etc/nginx/conf.d/gadd_agent.conf"
 
@@ -47,7 +47,7 @@ server {
 
         location ~ \.php\$ {
             include snippets/fastcgi-php.conf;
-            fastcgi_pass unix:/var/run/php/php${V_PHP_VERSION}-fpm.sock;
+            fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;
             fastcgi_param SCRIPT_FILENAME \$request_filename;
             include fastcgi_params;
         }

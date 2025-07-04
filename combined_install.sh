@@ -15,7 +15,7 @@ fi
 export NODE_OPTIONS="--max-old-space-size=4096" # for build RAM
 export COMPOSER_ALLOW_SUPERUSER=1
 SECRETS_FILE="./config.yml"
-export V_PHP_VERSION=$(yq '.php_version' "$SECRETS_FILE")
+export PHP_VERSION=$(yq '.php_version' "$SECRETS_FILE")
 export BB_USER=$(yq '.bitbucket_user' "$SECRETS_FILE")
 export BB_TOKEN=$(yq '.bitbucket_token' "$SECRETS_FILE")
 export NEXT_PUBLIC_API_URL=$(yq '.NEXT_PUBLIC_API_URL' "$SECRETS_FILE")
@@ -50,25 +50,25 @@ apt-get install -y libcairo2-dev libjpeg-dev libpango1.0-dev libgif-dev build-es
     systemctl enable nginx
     systemctl restart nginx
 
-    echo "🐘 [04] Installing PHP ${V_PHP_VERSION} and its extensions..."
+    echo "🐘 [04] Installing PHP ${PHP_VERSION} and its extensions..."
 
     if ! command -v php &> /dev/null; then
         add-apt-repository ppa:ondrej/php -y
         apt-get update
-        apt-get install -y php${V_PHP_VERSION}-fpm php-pear
+        apt-get install -y php${PHP_VERSION}-fpm php-pear
     fi
 
     extensions=(bcmath calendar mbstring gd xml curl gettext zip soap intl exif mysql readline ssh2 dev)
     for ext in "${extensions[@]}"; do
         if ! php -m | grep -qw "$ext"; then
-            apt-get install -y php${V_PHP_VERSION}-$ext
+            apt-get install -y php${PHP_VERSION}-$ext
         else
             echo "✅ Extension: $ext"
         fi
     done
 
-    systemctl enable php${V_PHP_VERSION}-fpm
-    systemctl start php${V_PHP_VERSION}-fpm
+    systemctl enable php${PHP_VERSION}-fpm
+    systemctl start php${PHP_VERSION}-fpm
 
 
      echo "🧩 [05] Installing MongoDB PHP extension v1.18.0..."
@@ -76,9 +76,9 @@ apt-get install -y libcairo2-dev libjpeg-dev libpango1.0-dev libgif-dev build-es
     if ! php -m | grep -q mongodb && ! pecl list | grep -q 'mongodb.*1.18.0'; then
     pecl channel-update pecl.php.net
     printf "\n" | pecl install mongodb-1.18.0 || true
-    echo "extension=mongodb.so" > "/etc/php/${V_PHP_VERSION}/mods-available/mongodb.ini"
+    echo "extension=mongodb.so" > "/etc/php/${PHP_VERSION}/mods-available/mongodb.ini"
     phpenmod mongodb
-    systemctl restart php${V_PHP_VERSION}-fpm
+    systemctl restart php${PHP_VERSION}-fpm
 
     fi
 
@@ -261,7 +261,7 @@ server {
 
         location ~ \.php\$ {
             include snippets/fastcgi-php.conf;
-            fastcgi_pass unix:/var/run/php/php${V_PHP_VERSION}-fpm.sock;
+            fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;
             fastcgi_param SCRIPT_FILENAME \$request_filename;
             include fastcgi_params;
         }

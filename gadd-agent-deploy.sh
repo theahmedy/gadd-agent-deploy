@@ -5,12 +5,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Load and export env vars
 extract_env_var() {
-    local env_name="$1"   # e.g., "common"
-    local key="$2"        # e.g., "DB_PASSWORD"
+    local env_name="$1"
+    local key="$2"
     local file="$SCRIPT_DIR/.env.${env_name}"
 
-    if [[ ! -f "$file" ]]; then
-        echo "[WARN] Env file not found: $file" >&2
+    if [[ ! -f "$file" || "$file" == *example* || "$file" == "$SCRIPT_DIR/.env" ]]; then
+        echo "[INFO] Ignoring invalid env file: $file"
         return 1
     fi
 
@@ -27,14 +27,15 @@ extract_env_var() {
     echo "$value"
 }
 
+
 # Load required env vars
 NODE_OPTIONS=$(extract_env_var "common" "NODE_OPTIONS")
 COMPOSER_ALLOW_SUPERUSER=$(extract_env_var "common" "COMPOSER_ALLOW_SUPERUSER")
 FRONTEND_NAME=$(extract_env_var "common" "FRONTEND_NAME")
 FRONTEND_REPO=$(extract_env_var "common" "FRONTEND_REPO")
-BACKEND_REPO=$(extract_env_var "common" "BACKEND_REPO")
-FRONTEND_DIR=$(extract_env_var "common" "FRONTEND_DIR")
 BACKEND_DIR=$(extract_env_var "common" "BACKEND_DIR")
+BACKEND_REPO=$(extract_env_var "common" "BACKEND_REPO")
+BACKEND_REPO=$(extract_env_var "common" "BACKEND_REPO")
 PHP_VERSION=$(extract_env_var "common" "PHP_VERSION")
 
 DB_USERNAME=$(extract_env_var "laravel" "DB_USERNAME")
@@ -137,9 +138,23 @@ install_mariadb() {
 }
 
 clone_projects() {
-    [ -d "$BACKEND_DIR" ]  || git clone "$BACKEND_REPO" "$BACKEND_DIR"
-    [ -d "$FRONTEND_DIR" ] || git clone "$FRONTEND_REPO" "$FRONTEND_DIR"
+    if [ ! -d "${BACKEND_DIR}/.git" ]; then
+        echo "[INFO] Cloning backend..."
+        git clone "${BACKEND_REPO}" "${BACKEND_DIR}" || {
+            echo "[ERROR] Failed to clone backend repo"
+            exit 1
+        }
+    fi
+
+    if [ ! -d "${FRONTEND_DIR}/.git" ]; then
+        echo "[INFO] Cloning frontend..."
+        git clone "${FRONTEND_REPO}" "${FRONTEND_DIR}" || {
+            echo "[ERROR] Failed to clone frontend repo"
+            exit 1
+        }
+    fi
 }
+
 
 setup_nginx_config() {
     if [ ! -f /etc/nginx/conf.d/supportad.conf ]; then

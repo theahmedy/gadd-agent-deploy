@@ -218,9 +218,14 @@ install_frontend_tools() {
 
 setup_frontend() {
     cd "$FRONTEND_DIR"
+    yarn cache clean
     yarn install
+    yarn cache clean
     yarn build
-    pm2 start npm --name nextjs -- start >/dev/null 2>&1 || true
+PORT=3000 NODE_ENV=production pm2 start npm --name "${FRONTEND_NAME}" -- start > /dev/null 2>&1 || true
+pm2 startup systemd -u $(whoami) --hp $HOME
+pm2 save
+systemctl enable pm2-$(whoami)
 }
 
 # ---- MAIN ----

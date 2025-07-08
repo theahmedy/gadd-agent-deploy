@@ -1,2 +1,4 @@
+# Ignore all .env* files
 .env*
-!.env*.example
+# But keep any template file in the format .env.example.*
+!.env.example.*

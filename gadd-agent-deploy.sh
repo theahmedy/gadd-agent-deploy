@@ -125,6 +125,7 @@ install_composer() {
             curl -sSL https://getcomposer.org/download/latest-stable/composer.phar -o /usr/local/bin/composer
             chmod +x /usr/local/bin/composer
         fi
+        rm -f composer-setup.php 
         command -v composer &> /dev/null || { echo "[ERROR] Composer install failed"; exit 1; }
     fi
 }
@@ -208,7 +209,8 @@ setup_laravel() {
     chown www-data:www-data .env
     chmod 664 .env
 
-    [ -d vendor ] || composer install --no-dev
+    [ -d vendor ] || COMPOSER_ALLOW_SUPERUSER=1 composer install
+ --no-dev
     php artisan key:generate --force
     php artisan storage:link --force
     php artisan db:wipe

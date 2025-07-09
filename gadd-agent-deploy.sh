@@ -27,24 +27,23 @@ extract_env_var() {
     echo "$value"
 }
 
-
 # Load required env vars
-NODE_OPTIONS=$(extract_env_var "common" "NODE_OPTIONS")
-COMPOSER_ALLOW_SUPERUSER=$(extract_env_var "common" "COMPOSER_ALLOW_SUPERUSER")
-FRONTEND_NAME=$(extract_env_var "common" "FRONTEND_NAME")
-FRONTEND_REPO=$(extract_env_var "common" "FRONTEND_REPO")
-BACKEND_DIR=$(extract_env_var "common" "BACKEND_DIR")
-BACKEND_REPO=$(extract_env_var "common" "BACKEND_REPO")
-BACKEND_REPO=$(extract_env_var "common" "BACKEND_REPO")
-PHP_VERSION=$(extract_env_var "common" "PHP_VERSION")
+extract_env_var "common" "NODE_OPTIONS"
+extract_env_var "common" "COMPOSER_ALLOW_SUPERUSER"
+extract_env_var "common" "FRONTEND_NAME"
+extract_env_var "common" "FRONTEND_REPO"
+extract_env_var "common" "FRONTEND_DIR"
+extract_env_var "common" "BACKEND_REPO"
+extract_env_var "common" "BACKEND_DIR"
+extract_env_var "common" "PHP_VERSION"
 
-DB_USERNAME=$(extract_env_var "laravel" "DB_USERNAME")
-DB_PASSWORD=$(extract_env_var "laravel" "DB_PASSWORD")
-DB_DATABASE=$(extract_env_var "laravel" "DB_DATABASE")
-DB_HOST=$(extract_env_var "laravel" "DB_HOST")
-DB_PORT=$(extract_env_var "laravel" "DB_PORT")
+extract_env_var "laravel" "DB_USERNAME"
+extract_env_var "laravel" "DB_PASSWORD"
+extract_env_var "laravel" "DB_DATABASE"
+extract_env_var "laravel" "DB_HOST"
+extract_env_var "laravel" "DB_PORT"
 
-NEXT_PUBLIC_API_URL=$(extract_env_var "nextjs" "NEXT_PUBLIC_API_URL")
+extract_env_var "nextjs" "NEXT_PUBLIC_API_URL"
 
 if ! command -v curl &> /dev/null; then 
     echo "[INFO] Installing curl..."
@@ -141,7 +140,7 @@ install_mariadb() {
 clone_projects() {
     if [ ! -d "${BACKEND_DIR}/.git" ]; then
         echo "[INFO] Cloning backend..."
-        git clone "${BACKEND_REPO}" "${BACKEND_DIR}" || {
+        git clone --branch dev/deploy-bugs "${BACKEND_REPO}" "${BACKEND_DIR}" || {
             echo "[ERROR] Failed to clone backend repo"
             exit 1
         }
@@ -149,13 +148,12 @@ clone_projects() {
 
     if [ ! -d "${FRONTEND_DIR}/.git" ]; then
         echo "[INFO] Cloning frontend..."
-        git clone "${FRONTEND_REPO}" "${FRONTEND_DIR}" || {
+        git clone --branch dev/deploy-bugs "${FRONTEND_REPO}" "${FRONTEND_DIR}" || {
             echo "[ERROR] Failed to clone frontend repo"
             exit 1
         }
     fi
 }
-
 
 setup_nginx_config() {
     if [ ! -f /etc/nginx/conf.d/supportad.conf ]; then
@@ -209,8 +207,7 @@ setup_laravel() {
     chown www-data:www-data .env
     chmod 664 .env
 
-    [ -d vendor ] || COMPOSER_ALLOW_SUPERUSER=1 composer install
- --no-dev
+    [ -d vendor ] || composer install --no-dev
     php artisan key:generate --force
     php artisan storage:link --force
     php artisan db:wipe
@@ -239,10 +236,10 @@ setup_frontend() {
     yarn install
     yarn cache clean
     yarn build
-PORT=3000 NODE_ENV=production pm2 start npm --name "${FRONTEND_NAME}" -- start > /dev/null 2>&1 || true
-pm2 startup systemd -u $(whoami) --hp $HOME
-pm2 save
-systemctl enable pm2-$(whoami)
+    PORT=3000 NODE_ENV=production pm2 start npm --name "${FRONTEND_NAME}" -- start > /dev/null 2>&1 || true
+    pm2 startup systemd -u $(whoami) --hp $HOME
+    pm2 save
+    systemctl enable pm2-$(whoami)
 }
 
 # ---- MAIN ----

@@ -203,9 +203,9 @@ setup_database() {
 setup_laravel() {
     cd "$BACKEND_DIR" || exit 1
 
-    [ -f .env ] || cp .env.laravel .env
-    chown www-data:www-data .env
-    chmod 664 .env
+cp $SCRIPT_DIR/.env.nextjs "$FRONTEND_DIR"/src/.env
+    chown www-data:www-data "$BACKEND_DIR"/.env
+    chmod 664 "$BACKEND_DIR"/.env
 
     [ -d vendor ] || composer install --no-dev
     php artisan key:generate --force
@@ -226,12 +226,12 @@ install_frontend_tools() {
     fi
 
     command -v yarn &>/dev/null || npm install -g yarn
-    command -v dotenv-cli &>/dev/null || npm install -g dotenv-cli || yarn global add dotenv-cli
     command -v pm2 &>/dev/null || npm install -g pm2 || yarn global add pm2
 }
 
 setup_frontend() {
     cd "$FRONTEND_DIR"
+    cp $SCRIPT_DIR/.env.nextjs "$FRONTEND_DIR"/src/.env
     yarn cache clean
     yarn install
     yarn cache clean

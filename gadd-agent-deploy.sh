@@ -207,7 +207,8 @@ cp $SCRIPT_DIR/.env.nextjs "$FRONTEND_DIR"/src/.env
     chown www-data:www-data "$BACKEND_DIR"/.env
     chmod 664 "$BACKEND_DIR"/.env
 
-    [ -d vendor ] || composer install --no-dev
+    COMPOSER_ALLOW_SUPERUSER=1 composer install
+
     php artisan key:generate --force
     php artisan storage:link --force
     php artisan db:wipe
